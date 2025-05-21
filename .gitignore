@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Poetry
+*.venv/
+# (ou o nome da pasta do ambiente virtual, caso esteja dentro do projeto)
+
+# VS Code (se usar)
+.vscode/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
