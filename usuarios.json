@@ -1,0 +1,18 @@
+{
+    "autorizados": [
+        "email1@exemplo.com",
+        "email2@exemplo.com",
+        "eduardo.oliveira@hilti.com",
+        "marcia.jmml@gmail.com"
+    ],
+    "usuarios": {
+        "email1@exemplo.com": {
+            "nome": "Usu\u00c3\u00a1rio 1",
+            "senha_hash": "HASH_DA_SENHA"
+        },
+        "eduardo.oliveira@hilti.com": {
+            "nome": "Eduardo Oliveira",
+            "senha_hash": "1c6746642df710a839be05b74344e2b79104406f59fb2f11f462897ba0e8432a"
+        }
+    }
+}
