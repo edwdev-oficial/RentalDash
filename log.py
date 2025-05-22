@@ -66,7 +66,7 @@ else:
         </style>
     """, unsafe_allow_html=True)
     st.markdown('<div class="right-align">', unsafe_allow_html=True)
-    st.image(r'.\assets\imgs\logoHilti.png')
+    st.image('assets/imgs/logoHilti.png')
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.title("Rental Dash Login")
