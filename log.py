@@ -46,7 +46,30 @@ if st.session_state.logado:
     main.show()
 
 else:
-    st.title("Minha aplicação com login")
+    #%% logo
+    st.markdown("""
+        <style>
+        .streamlit-expanderHeader {
+            border-radius: 0 !important;
+        }
+        img {
+            border-radius: 0 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    # Injetar CSS para alinhar a imagem à direita
+    st.markdown("""
+        <style>
+        .right-align {
+            text-align: right;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="right-align">', unsafe_allow_html=True)
+    st.image(r'.\assets\imgs\logoHilti.png')
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.title("Rental Dash Login")
     dados = carregar_dados()
 
     pagina = st.sidebar.selectbox("Acesso", ["Login", "Cadastro"])

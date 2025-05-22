@@ -1,14 +1,17 @@
-# Byte-compiled / optimized / DLL files
+# Arquivos Python
 __pycache__/
-*.py[cod]
+*.pyc
 
-# Poetry
-*.venv/
-# (ou o nome da pasta do ambiente virtual, caso esteja dentro do projeto)
+# Streamlit secrets
+.streamlit/secrets.toml
 
-# VS Code (se usar)
-.vscode/
+# Ambientes virtuais
+venv/
+.env/
 
-# Arquivos do sistema
+# Jupyter notebooks temporários
+.ipynb_checkpoints/
+
+# Arquivos de sistema
 .DS_Store
 Thumbs.db

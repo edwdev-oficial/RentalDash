@@ -4,6 +4,7 @@ from st_aggrid import AgGrid
 from make_aggrid import make_grid
 from utils import adjust_coluns
 import plotly.graph_objects as go
+import gspread
 
 def show():
 
@@ -37,35 +38,61 @@ def show():
         </style>
     """, unsafe_allow_html=True)
     st.markdown('<div class="right-align">', unsafe_allow_html=True)
-    st.image(r'D:\HILTI\images\hilti logos\logoHilti.png')
+    st.image(r'.\assets\imgs\logoHilti.png')
     st.markdown('</div>', unsafe_allow_html=True)
 
+    #%% Title
     st.title('Rental Dash - Tool Life Time')
     st.divider()
 
-    df_over_view = pd.read_csv(r'C:\Users\Eduardo\OneDrive - Hilti\Rental Dash\CC Sorocaba\Tools with repairs info.csv')
 
+    # #%% Read data
+    # df_over_view = pd.read_csv(r'C:\Users\Eduardo\OneDrive - Hilti\Rental Dash\CC Sorocaba\Tools with repairs info.csv')
+    # st.dataframe(df_over_view)
+    # df_over_view.to_excel('Tools with repairs info.xlsx', index=False)
+    gc = gspread.service_account_from_dict(st.secrets["gspread_service_account"])
+    sh = gc.open('Tools with repairs info')
+    worksheet = sh.worksheet("Sheet1")
+    dados = worksheet.get_all_values()
+    df_over_view = pd.DataFrame(dados[1:], columns=dados[0])
     df_over_view = adjust_coluns(df_over_view)
 
     grid_options = make_grid(df_over_view)
 
     grid_response_over_view = make_aggrid(df_over_view)
 
-    df_over_view_response = grid_response_over_view.data
+    # df_over_view_response = grid_response_over_view.data
     selected_rows_over_view_response = grid_response_over_view.selected_rows
 
     if selected_rows_over_view_response is not None and not selected_rows_over_view_response.empty:
-        st.divider()
-        # st.dataframe(selected_rows_over_view_response)
         serial_number = selected_rows_over_view_response.iloc[0, 1]
 
-        df_tool_type_deep_dive = pd.read_csv(r'C:\Users\Eduardo\OneDrive - Hilti\Rental Dash\CC Sorocaba\G_GMRRPCOPA_AMS_KF2_W2.csv')
+        # df_tool_type_deep_dive = pd.read_csv(r'C:\Users\Eduardo\OneDrive - Hilti\Rental Dash\CC Sorocaba\G_GMRRPCOPA_AMS_KF2_W2.csv')
+        # st.dataframe(df_tool_type_deep_dive)
+        # df_tool_type_deep_dive.to_excel('G_GMRRPCOPA_AMS_KF2_W2.xlsx')  
+        gc = gspread.service_account_from_dict(st.secrets["gspread_service_account"])
+        sh = gc.open('G_GMRRPCOPA_AMS_KF2_W2')
+        worksheet = sh.worksheet("Sheet1")
+        dados = worksheet.get_all_values()
+        df_tool_type_deep_dive = pd.DataFrame(dados[1:], columns=dados[0])
+        df_tool_type_deep_dive = adjust_coluns(df_tool_type_deep_dive)
+
         df_tool_type_deep_dive = adjust_coluns(df_tool_type_deep_dive)
         df_tool_type_deep_dive = df_tool_type_deep_dive.loc[df_tool_type_deep_dive['(n) Serial Number'] == serial_number]
-        # st.dataframe(df_tool_type_deep_dive)
 
         data_compra = pd.to_datetime(selected_rows_over_view_response.iloc[0, 4])
         ferramenta = selected_rows_over_view_response.iloc[0, 2]
+        
+        # st.dataframe(df_tool_type_deep_dive)
+
+        # df_tool_type_deep_dive['Notif. Completion Date'] = pd.to_datetime(df_tool_type_deep_dive['Notif. Completion Date'], dayfirst=False, errors='coerce')
+        df_tool_type_deep_dive['Notif. Completion Date'] = pd.to_datetime(
+            df_tool_type_deep_dive['Notif. Completion Date'].str.strip(),
+            format='%Y-%m-%d',
+            errors='coerce'
+        )        
+
+        # st.dataframe(df_tool_type_deep_dive)
 
         linha_vida = pd.concat([
             pd.DataFrame({'data': [data_compra], 'Total Cust': [0]}),
