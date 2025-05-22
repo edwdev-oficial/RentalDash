@@ -6,17 +6,34 @@ from utils import adjust_coluns
 import plotly.graph_objects as go
 import gspread
 
-def show():
-
-    def make_aggrid(df):
-        return AgGrid(
-        df,
-        gridOptions=grid_options,
-        enable_enterprise_modules=False,
-        fit_columns_on_grid_load=True,
-        allow_unsafe_jscode=True,
-        height=300    
+def load_data():
+    gc = gspread.service_account_from_dict(st.secrets["gspread_service_account"])
+    sh_tools_with_repairs_info = gc.open('Tools with repairs info')
+    df_over_view = pd.DataFrame(
+        sh_tools_with_repairs_info.worksheet('Sheet1').get_all_values()[1:],
+        columns = sh_tools_with_repairs_info.worksheet('Sheet1').get_all_values()[0]
     )
+    sh_G_GMRRPCOPA_AMS_KF2_W2 = gc.open('G_GMRRPCOPA_AMS_KF2_W2')
+    df_tool_type_deep_dive = pd.DataFrame(
+        sh_G_GMRRPCOPA_AMS_KF2_W2.worksheet('Sheet1').get_all_values()[1:],
+        columns = sh_G_GMRRPCOPA_AMS_KF2_W2.worksheet('Sheet1').get_all_values()[0]
+    )
+    df_over_view = adjust_coluns(df_over_view)
+    df_tool_type_deep_dive = adjust_coluns(df_tool_type_deep_dive)
+
+    return {'df_over_view': df_over_view, 'df_tool_type_deep_dive': df_tool_type_deep_dive}
+
+def make_aggrid(df, grid_options):
+    return AgGrid(
+    df,
+    gridOptions=grid_options,
+    enable_enterprise_modules=False,
+    fit_columns_on_grid_load=True,
+    allow_unsafe_jscode=True,
+    height=300    
+)
+
+def show():
 
     #%% logo
     st.markdown("""
@@ -45,59 +62,34 @@ def show():
     st.title('Rental Dash - Tool Life Time')
     st.divider()
 
+    if 'loaded_data' not in st.session_state:
+        st.session_state.loaded_data = load_data()
 
-    # #%% Read data
-    # df_over_view = pd.read_csv(r'C:\Users\Eduardo\OneDrive - Hilti\Rental Dash\CC Sorocaba\Tools with repairs info.csv')
-    # st.dataframe(df_over_view)
-    # df_over_view.to_excel('Tools with repairs info.xlsx', index=False)
-    gc = gspread.service_account_from_dict(st.secrets["gspread_service_account"])
-    sh = gc.open('Tools with repairs info')
-    worksheet = sh.worksheet("Sheet1")
-    dados = worksheet.get_all_values()
-    df_over_view = pd.DataFrame(dados[1:], columns=dados[0])
-    df_over_view = adjust_coluns(df_over_view)
+    dados = st.session_state.loaded_data
 
+    df_over_view = dados['df_over_view']
+    df_tool_type_deep_dive = dados['df_tool_type_deep_dive']
     grid_options = make_grid(df_over_view)
+    grid_response_over_view = make_aggrid(df_over_view, grid_options)
 
-    grid_response_over_view = make_aggrid(df_over_view)
-
-    # df_over_view_response = grid_response_over_view.data
     selected_rows_over_view_response = grid_response_over_view.selected_rows
 
     if selected_rows_over_view_response is not None and not selected_rows_over_view_response.empty:
         serial_number = selected_rows_over_view_response.iloc[0, 1]
 
-        # df_tool_type_deep_dive = pd.read_csv(r'C:\Users\Eduardo\OneDrive - Hilti\Rental Dash\CC Sorocaba\G_GMRRPCOPA_AMS_KF2_W2.csv')
-        # st.dataframe(df_tool_type_deep_dive)
-        # df_tool_type_deep_dive.to_excel('G_GMRRPCOPA_AMS_KF2_W2.xlsx')  
-        gc = gspread.service_account_from_dict(st.secrets["gspread_service_account"])
-        sh = gc.open('G_GMRRPCOPA_AMS_KF2_W2')
-        worksheet = sh.worksheet("Sheet1")
-        dados = worksheet.get_all_values()
-        df_tool_type_deep_dive = pd.DataFrame(dados[1:], columns=dados[0])
-        df_tool_type_deep_dive = adjust_coluns(df_tool_type_deep_dive)
-
-        df_tool_type_deep_dive = adjust_coluns(df_tool_type_deep_dive)
-        df_tool_type_deep_dive = df_tool_type_deep_dive.loc[df_tool_type_deep_dive['(n) Serial Number'] == serial_number]
+        df_tool_type_deep_dive = df_tool_type_deep_dive.loc[df_tool_type_deep_dive['(n) Serial Number'] == serial_number].copy()
 
         data_compra = pd.to_datetime(selected_rows_over_view_response.iloc[0, 4])
         ferramenta = selected_rows_over_view_response.iloc[0, 2]
-        
-        # st.dataframe(df_tool_type_deep_dive)
 
-        # df_tool_type_deep_dive['Notif. Completion Date'] = pd.to_datetime(df_tool_type_deep_dive['Notif. Completion Date'], dayfirst=False, errors='coerce')
-        df_tool_type_deep_dive['Notif. Completion Date'] = pd.to_datetime(
-            df_tool_type_deep_dive['Notif. Completion Date'].str.strip(),
-            format='%Y-%m-%d',
-            errors='coerce'
-        )        
-
-        # st.dataframe(df_tool_type_deep_dive)
+        df_tool_type_deep_dive['Notif. Completion Date'] = pd.to_datetime(df_tool_type_deep_dive['Notif. Completion Date'], errors='coerce')
 
         linha_vida = pd.concat([
             pd.DataFrame({'data': [data_compra], 'Total Cust': [0]}),
             df_tool_type_deep_dive.rename(columns={'Notif. Completion Date': 'data'})[['data', 'Total Cust']]
         ]).sort_values('data')
+        linha_vida['Total Cust'] = round(pd.to_numeric(linha_vida['Total Cust'], errors='coerce'), 2)
+        linha_vida['Custo Acumulado'] = round(linha_vida['Total Cust'].cumsum(), 2)
 
         # Criar o gráfico
         fig = go.Figure()
@@ -108,16 +100,28 @@ def show():
             mode='lines+markers',
             marker=dict(size=10),
             line=dict(color='red'),
-            name='Custo de Reparo'
+            name='Custo por Reparo'
+        ))
+
+
+        fig.add_trace(go.Scatter(
+            x=linha_vida['data'],
+            y=linha_vida['Custo Acumulado'],
+            mode='lines+markers',
+            marker=dict(size=8),
+            line=dict(color='blue', dash='dash'),
+            name='Custo Acumulado'
         ))
 
         fig.update_layout(
             title=f"Life Time {ferramenta} serial number: {serial_number}",
             xaxis_title='Data',
             yaxis_title='Custo (R$)',
-            xaxis=dict(showgrid=True),
+            xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=True),
             hovermode='x unified'
         )
 
-        st.plotly_chart(fig, use_container_width=True)    
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Selecione uma ferramenta na tabela acima para ver o gráfico de vida útil.")          
