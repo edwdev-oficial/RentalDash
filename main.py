@@ -67,6 +67,23 @@ def show():
 
     dados = st.session_state.loaded_data
 
+    #CHECAGEM
+    # dados = load_data()
+
+    # df_over_view = dados['df_over_view']
+    # df_tool_type_deep_dive = dados['df_tool_type_deep_dive']
+
+    # df_over_view_copy = df_over_view.copy()
+    # df_tool_type_deep_dive_copy = df_tool_type_deep_dive.copy()
+    
+    # df_over_view_copy = df_over_view_copy[df_over_view_copy['Serial Number'] == '174155']
+    # df_tool_type_deep_dive_copy = df_tool_type_deep_dive_copy[df_tool_type_deep_dive_copy['(n) Serial Number'] == '174155']
+    # df_tool_type_deep_dive_copy['Cutos acumulado'] = df_tool_type_deep_dive_copy['Total Cust'].cumsum()
+
+    # st.dataframe(df_over_view_copy)
+    # st.dataframe(df_tool_type_deep_dive_copy)    
+
+    # FIM CHECAGEM DESCOMENTAR AS DUAS LINHAS ABAIXO E EXCLUIR AS ACIMA
     df_over_view = dados['df_over_view']
     df_tool_type_deep_dive = dados['df_tool_type_deep_dive']
     grid_options = make_grid(df_over_view)
@@ -86,31 +103,32 @@ def show():
 
         linha_vida = pd.concat([
             pd.DataFrame({'data': [data_compra], 'Total Cust': [0]}),
-            df_tool_type_deep_dive.rename(columns={'Notif. Completion Date': 'data'})[['data', 'Total Cust']]
+            df_tool_type_deep_dive.rename(columns={'Notif. Completion Date': 'data'})
         ]).sort_values('data')
-        linha_vida['Total Cust'] = round(pd.to_numeric(linha_vida['Total Cust'], errors='coerce'), 2)
-        linha_vida['Custo Acumulado'] = round(linha_vida['Total Cust'].cumsum(), 2)
+        # st.dataframe(linha_vida)
+        linha_vida['Cost per repair'] = round(pd.to_numeric(linha_vida['Total Cust'], errors='coerce'), 2)
+        linha_vida['Total Covered by Customer'] = round(linha_vida['Covered by Customer'].cumsum(), 2)
 
         # Criar o gráfico
         fig = go.Figure()
 
         fig.add_trace(go.Scatter(
             x=linha_vida['data'],
-            y=linha_vida['Total Cust'],
+            y=linha_vida['Cost per repair'],
             mode='lines+markers',
             marker=dict(size=10),
             line=dict(color='red'),
-            name='Custo por Reparo'
+            name='Cost per repair'
         ))
 
 
         fig.add_trace(go.Scatter(
             x=linha_vida['data'],
-            y=linha_vida['Custo Acumulado'],
+            y=linha_vida['Total Covered by Customer'],
             mode='lines+markers',
             marker=dict(size=8),
             line=dict(color='blue', dash='dash'),
-            name='Custo Acumulado'
+            name='Total Covered by Customer'
         ))
 
         fig.update_layout(
