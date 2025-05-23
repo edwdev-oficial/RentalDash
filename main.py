@@ -67,23 +67,6 @@ def show():
 
     dados = st.session_state.loaded_data
 
-    #CHECAGEM
-    # dados = load_data()
-
-    # df_over_view = dados['df_over_view']
-    # df_tool_type_deep_dive = dados['df_tool_type_deep_dive']
-
-    # df_over_view_copy = df_over_view.copy()
-    # df_tool_type_deep_dive_copy = df_tool_type_deep_dive.copy()
-    
-    # df_over_view_copy = df_over_view_copy[df_over_view_copy['Serial Number'] == '174155']
-    # df_tool_type_deep_dive_copy = df_tool_type_deep_dive_copy[df_tool_type_deep_dive_copy['(n) Serial Number'] == '174155']
-    # df_tool_type_deep_dive_copy['Cutos acumulado'] = df_tool_type_deep_dive_copy['Total Cust'].cumsum()
-
-    # st.dataframe(df_over_view_copy)
-    # st.dataframe(df_tool_type_deep_dive_copy)    
-
-    # FIM CHECAGEM DESCOMENTAR AS DUAS LINHAS ABAIXO E EXCLUIR AS ACIMA
     df_over_view = dados['df_over_view']
     df_tool_type_deep_dive = dados['df_tool_type_deep_dive']
     grid_options = make_grid(df_over_view)
@@ -142,4 +125,5 @@ def show():
 
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Selecione uma ferramenta na tabela acima para ver o gráfico de vida útil.")          
+        st.info("Selecione uma ferramenta na tabela acima para ver o gráfico de vida útil.")  
+
